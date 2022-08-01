@@ -2,6 +2,7 @@ import datetime
 import pytz
 
 from rest_framework import filters, generics
+from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 from .models import Blockchain, Asset, Wallet, AssetOnBlockchain, BalanceHistory, Provider, NFT
@@ -61,15 +62,13 @@ class BalanceHistoryListAPIView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         """
-        Compress data from [{"key1": "value11", "key2": "value12"}, {"key1": "value22", "key2": "value22"}]
-        to ["key1": ["value11", "value12"], "key2": ["value21", "value22"]]
+        Process data with custom format
         """
-        response = super().list(request, *args, **kwargs)
-        response.data = [
-             [item['timestamp'], item['balance']] for item in response.data
+        data = [
+             [int(item.timestamp.timestamp() * 1000), item.balance] for item in self.get_queryset()
         ]
 
-        return response
+        return Response(data)
 
 
 class ProviderListAPIView(generics.ListAPIView):
